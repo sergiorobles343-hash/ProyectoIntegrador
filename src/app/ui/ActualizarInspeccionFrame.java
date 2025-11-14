@@ -47,15 +47,23 @@ public class ActualizarInspeccionFrame extends JFrame {
 
         JLabel lblPredio = new JLabel("Predio:");
         txtPredio = new JTextField(predio);
+        txtPredio.setEditable(false); // 🔒 Campo bloqueado
+        txtPredio.setBackground(new Color(240, 240, 240)); // Color de fondo gris para indicar bloqueado
 
         JLabel lblFecha = new JLabel("Fecha (YYYY-MM-DD):");
         txtFecha = new JFormattedTextField(fecha);
+        txtFecha.setEditable(false); // 🔒 Campo bloqueado
+        txtFecha.setBackground(new Color(240, 240, 240)); // Color de fondo gris para indicar bloqueado
 
         JLabel lblCultivo = new JLabel("Cultivo:");
         txtCultivo = new JTextField(cultivo);
+        txtCultivo.setEditable(false); // 🔒 Campo bloqueado
+        txtCultivo.setBackground(new Color(240, 240, 240)); // Color de fondo gris para indicar bloqueado
 
         JLabel lblPlaga = new JLabel("Plaga:");
         txtPlaga = new JTextField(plaga);
+        txtPlaga.setEditable(false); // 🔒 Campo bloqueado
+        txtPlaga.setBackground(new Color(240, 240, 240)); // Color de fondo gris para indicar bloqueado
 
         JLabel lblObsG = new JLabel("Observaciones Generales:");
         txtObsGenerales = new JTextArea(obsGenerales);
@@ -95,6 +103,7 @@ public class ActualizarInspeccionFrame extends JFrame {
         // --- Acción del botón ---
         btnGuardar.addActionListener(e -> guardarCambios());
     }
+
 // Valida y guarda los cambios de la inspección en la base de datos. Obtiene datos de campos,
 // verifica que predio y fecha no estén vacíos, actualiza tabla INSPECCION y DETALLE_INSPECCION.
 // Maneja excepciones de formato de fecha y errores SQL, mostrando mensajes al usuario.
@@ -111,20 +120,17 @@ private void guardarCambios() {
         return;
     }
 
-    String sql = "UPDATE INSPECCION SET FECHA=?, OBSERVACIONES_GENERALES=? WHERE ID_INSPECCION=?";
+    String sql = "UPDATE INSPECCION SET OBSERVACIONES_GENERALES=? WHERE ID_INSPECCION=?";
 
     try (Connection conn = Conexion.getConnection()) {
-        java.sql.Date fechaSQL = java.sql.Date.valueOf(fechaStr);
-        
-        // Actualiza tabla INSPECCION
+        // Actualiza tabla INSPECCION (solo observaciones generales)
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setDate(1, fechaSQL);
-            pstmt.setString(2, obsG);
-            pstmt.setInt(3, idInspeccion);
+            pstmt.setString(1, obsG);
+            pstmt.setInt(2, idInspeccion);
             pstmt.executeUpdate();
         }
 
-        //Actualizar DETALLE_INSPECCION solo si hay texto
+        // Actualizar DETALLE_INSPECCION solo si hay texto
         // O crear el registro si no existe
         if (!obsE.isEmpty()) {
             boolean actualizado = InspeccionDatabase.actualizarObservacionesEspecificas(idInspeccion, obsE);
@@ -148,11 +154,6 @@ private void guardarCambios() {
         JOptionPane.showMessageDialog(this, "Inspección actualizada correctamente.");
         dispose();
 
-    } catch (IllegalArgumentException e) {
-        JOptionPane.showMessageDialog(this, 
-            "Formato de fecha inválido. Use: YYYY-MM-DD (ej: 2025-10-08)", 
-            "Error", 
-            JOptionPane.ERROR_MESSAGE);
     } catch (SQLException e) {
         JOptionPane.showMessageDialog(this, "Error al actualizar: " + e.getMessage());
         e.printStackTrace();

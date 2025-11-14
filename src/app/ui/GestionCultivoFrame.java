@@ -181,7 +181,13 @@ public class GestionCultivoFrame extends JFrame {
         JTextField txtEspecie = crearCampo();
         JTextField txtNombreComun = crearCampo();
         JTextField txtVariedad = crearCampo();
-        JTextField txtCiclo = crearCampo();
+
+        // ComboBox para Ciclo
+        JComboBox<String> comboCiclo = new JComboBox<>();
+        comboCiclo.setFont(new Font("Poppins", Font.PLAIN, 14));
+        comboCiclo.addItem("Corto");
+        comboCiclo.addItem("Medio");
+        comboCiclo.addItem("Largo");
 
         // ComboBox de predios
         JComboBox<String> comboPredio = new JComboBox<>();
@@ -194,7 +200,11 @@ public class GestionCultivoFrame extends JFrame {
         agregarCampo(panel, gbc, "Especie Científica:", txtEspecie, 0);
         agregarCampo(panel, gbc, "Nombre Común:", txtNombreComun, 1);
         agregarCampo(panel, gbc, "Variedad:", txtVariedad, 2);
-        agregarCampo(panel, gbc, "Ciclo:", txtCiclo, 3);
+
+        gbc.gridy = 6;
+        panel.add(crearLabel("Ciclo:"), gbc);
+        gbc.gridy = 7;
+        panel.add(comboCiclo, gbc);
         
         gbc.gridy = 8;
         panel.add(crearLabel("Predio:"), gbc);
@@ -210,7 +220,7 @@ public class GestionCultivoFrame extends JFrame {
             String especie = txtEspecie.getText().trim();
             String nombreComun = txtNombreComun.getText().trim();
             String variedad = txtVariedad.getText().trim();
-            String ciclo = txtCiclo.getText().trim();
+            String ciclo = (String) comboCiclo.getSelectedItem();
             String predioNombre = (String) comboPredio.getSelectedItem();
 
             if (especie.isEmpty() || nombreComun.isEmpty() || predioNombre == null) {
