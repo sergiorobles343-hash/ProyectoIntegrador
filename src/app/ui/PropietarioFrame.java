@@ -19,6 +19,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 import javax.swing.border.LineBorder;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
@@ -42,7 +43,8 @@ public class PropietarioFrame extends JFrame {
         cargarPredios();
         cargarHistorialInspecciones();
     }
-  // TEMPORAL PA QUE FUNCIONE
+
+    // TEMPORAL PA QUE FUNCIONE
     private JButton crearBoton(String texto, Color colorFondo) {
         JButton btn = new JButton(texto);
         btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -107,374 +109,288 @@ public class PropietarioFrame extends JFrame {
         add(mainPanel);
     }
 
+    private JPanel crearPanelPredios() {
+        JPanel panel = new JPanel(new BorderLayout(15, 15));
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-// MODIFICAR EL MÉTODO crearPanelPredios() - REEMPLAZAR COMPLETAMENTE
+        // Formulario con scroll
+        JPanel panelFormContainer = new JPanel(new BorderLayout());
+        panelFormContainer.setBackground(Color.WHITE);
+        panelFormContainer.setPreferredSize(new Dimension(400, 0));
 
-private JPanel crearPanelPredios() {
-    JPanel panel = new JPanel(new BorderLayout(15, 15));
-    panel.setBackground(Color.WHITE);
-    panel.setBorder(new EmptyBorder(15, 15, 15, 15));
+        JPanel panelForm = new JPanel(new GridBagLayout());
+        panelForm.setBackground(new Color(250, 250, 252));
+        panelForm.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(230, 230, 240), 1),
+            new EmptyBorder(20, 20, 20, 20)
+        ));
 
-    // Formulario con scroll
-    JPanel panelFormContainer = new JPanel(new BorderLayout());
-    panelFormContainer.setBackground(Color.WHITE);
-    panelFormContainer.setPreferredSize(new Dimension(400, 0)); // Aumentado a 400px
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(8, 0, 8, 0);
+        gbc.weightx = 1.0;
+        gbc.gridx = 0;
 
-    JPanel panelForm = new JPanel(new GridBagLayout());
-    panelForm.setBackground(new Color(250, 250, 252));
-    panelForm.setBorder(BorderFactory.createCompoundBorder(
-        BorderFactory.createLineBorder(new Color(230, 230, 240), 1),
-        new EmptyBorder(20, 20, 20, 20)
-    ));
+        JLabel lblFormTitulo = new JLabel("Agregar Nuevo Predio");
+        lblFormTitulo.setFont(new Font("Poppins", Font.BOLD, 16));
+        lblFormTitulo.setForeground(new Color(25, 30, 40));
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 15, 0);
+        panelForm.add(lblFormTitulo, gbc);
 
-    GridBagConstraints gbc = new GridBagConstraints();
-    gbc.fill = GridBagConstraints.HORIZONTAL;
-    gbc.insets = new Insets(8, 0, 8, 0);
-    gbc.weightx = 1.0;
-    gbc.gridx = 0;
+        gbc.insets = new Insets(8, 0, 8, 0);
 
-    JLabel lblFormTitulo = new JLabel("Agregar Nuevo Predio");
-    lblFormTitulo.setFont(new Font("Poppins", Font.BOLD, 16));
-    lblFormTitulo.setForeground(new Color(25, 30, 40));
-    gbc.gridy = 0;
-    gbc.insets = new Insets(0, 0, 15, 0);
-    panelForm.add(lblFormTitulo, gbc);
+        txtNumeroPredial = crearCampoTexto();
+        txtNombre = crearCampoTexto();
+        txtVereda = crearCampoTexto();
+        txtLatitud = crearCampoTexto();
+        txtLongitud = crearCampoTexto();
 
-    gbc.insets = new Insets(8, 0, 8, 0);
+        cbDepartamento = new JComboBox<>();
+        cbMunicipio = new JComboBox<>();
+        estilizarCombo(cbDepartamento);
+        estilizarCombo(cbMunicipio);
 
-    txtNumeroPredial = crearCampoTexto();
-    txtNombre = crearCampoTexto();
-    txtVereda = crearCampoTexto();
-    txtLatitud = crearCampoTexto();
-    txtLongitud = crearCampoTexto();
-
-    cbDepartamento = new JComboBox<>();
-    cbMunicipio = new JComboBox<>();
-    estilizarCombo(cbDepartamento);
-    estilizarCombo(cbMunicipio);
-
-    // Llenar departamentos
-    SwingWorker<Void, Void> worker = new SwingWorker<>() {
-        List<String> departamentos;
-        @Override
-        protected Void doInBackground() {
-            departamentos = ColombiaAPI.obtenerDepartamentos();
-            return null;
-        }
-        @Override
-        protected void done() {
-            if (departamentos != null) {
-                cbDepartamento.addItem("Seleccione...");
-                for (String d : departamentos) cbDepartamento.addItem(d);
+        // Llenar departamentos
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            List<String> departamentos;
+            @Override
+            protected Void doInBackground() {
+                departamentos = ColombiaAPI.obtenerDepartamentos();
+                return null;
             }
-        }
-    };
-    worker.execute();
-
-    // Evento cambio de departamento
-    cbDepartamento.addActionListener(e -> {
-        String depto = (String) cbDepartamento.getSelectedItem();
-        if (depto != null && !depto.equals("Seleccione...")) {
-            cbMunicipio.removeAllItems();
-            cbMunicipio.addItem("Cargando...");
-            SwingWorker<Void, Void> workerM = new SwingWorker<>() {
-                List<String> municipios;
-                @Override
-                protected Void doInBackground() {
-                    municipios = ColombiaAPI.obtenerMunicipiosPorDepartamento(depto);
-                    return null;
+            @Override
+            protected void done() {
+                if (departamentos != null) {
+                    cbDepartamento.addItem("Seleccione...");
+                    for (String d : departamentos) cbDepartamento.addItem(d);
                 }
-                @Override
-                protected void done() {
-                    cbMunicipio.removeAllItems();
-                    cbMunicipio.addItem("Seleccione...");
-                    if (municipios != null) {
-                        for (String m : municipios) cbMunicipio.addItem(m);
+            }
+        };
+        worker.execute();
+
+        // Evento cambio de departamento
+        cbDepartamento.addActionListener(e -> {
+            String depto = (String) cbDepartamento.getSelectedItem();
+            if (depto != null && !depto.equals("Seleccione...")) {
+                cbMunicipio.removeAllItems();
+                cbMunicipio.addItem("Cargando...");
+                SwingWorker<Void, Void> workerM = new SwingWorker<>() {
+                    List<String> municipios;
+                    @Override
+                    protected Void doInBackground() {
+                        municipios = ColombiaAPI.obtenerMunicipiosPorDepartamento(depto);
+                        return null;
                     }
-                }
-            };
-            workerM.execute();
-        }
-    });
-
-    gbc.gridy = 1;
-    panelForm.add(crearLabel("Número Predial:"), gbc);
-    gbc.gridy = 2;
-    panelForm.add(txtNumeroPredial, gbc);
-
-    gbc.gridy = 3;
-    panelForm.add(crearLabel("Nombre del predio:"), gbc);
-    gbc.gridy = 4;
-    panelForm.add(txtNombre, gbc);
-
-    gbc.gridy = 5;
-    panelForm.add(crearLabel("Departamento:"), gbc);
-    gbc.gridy = 6;
-    panelForm.add(cbDepartamento, gbc);
-
-    gbc.gridy = 7;
-    panelForm.add(crearLabel("Municipio:"), gbc);
-    gbc.gridy = 8;
-    panelForm.add(cbMunicipio, gbc);
-
-    gbc.gridy = 9;
-    panelForm.add(crearLabel("Vereda:"), gbc);
-    gbc.gridy = 10;
-    panelForm.add(txtVereda, gbc);
-
-    gbc.gridy = 11;
-    panelForm.add(crearLabel("Latitud:"), gbc);
-    gbc.gridy = 12;
-    panelForm.add(txtLatitud, gbc);
-
-    gbc.gridy = 13;
-    panelForm.add(crearLabel("Longitud:"), gbc);
-    gbc.gridy = 14;
-    panelForm.add(txtLongitud, gbc);
-
-    // ========== MINIMAPA - MOVIDO AQUÍ ==========
-    JPanel panelMapa = new JPanel(new BorderLayout(5, 5));
-    panelMapa.setBackground(new Color(250, 250, 252));
-    panelMapa.setBorder(BorderFactory.createCompoundBorder(
-        BorderFactory.createLineBorder(new Color(70, 130, 255), 2),
-        new EmptyBorder(12, 12, 12, 12)
-    ));
-    panelMapa.setPreferredSize(new Dimension(360, 350));
-
-    JLabel lblMapaTitulo = new JLabel("🗺️ Vista Previa del Predio");
-    lblMapaTitulo.setFont(new Font("Poppins", Font.BOLD, 14));
-    lblMapaTitulo.setForeground(new Color(25, 30, 40));
-
-    JEditorPane miniMapa = new JEditorPane();
-    miniMapa.setContentType("text/html");
-    miniMapa.setEditable(false);
-    miniMapa.setBackground(new Color(240, 245, 250));
-    
-    // Deshabilitar hipervínculos
-    miniMapa.addHyperlinkListener(new HyperlinkListener() {
-        @Override
-        public void hyperlinkUpdate(HyperlinkEvent e) {
-            // No hacer nada - deshabilita clics en enlaces
-        }
-    });
-
-    // Mensaje inicial
-    miniMapa.setText("<html><body style='font-family: Segoe UI; padding: 40px 20px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);'>"
-        + "<div style='background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);'>"
-        + "<div style='font-size: 48px; margin-bottom: 15px;'>📍</div>"
-        + "<h3 style='color: #1976D2; margin: 10px 0;'>Vista Previa del Predio</h3>"
-        + "<p style='color: #666; font-size: 13px; margin: 10px 0;'>"
-        + "Ingresa las coordenadas (Latitud y Longitud)<br>y presiona <b style='color: #1976D2;'>Ver en Mapa</b></p>"
-        + "</div></body></html>");
-
-    // Panel contenedor del mapa SIN scroll interno
-    JPanel contenedorMapa = new JPanel(new BorderLayout());
-    contenedorMapa.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 230), 1));
-    contenedorMapa.setPreferredSize(new Dimension(340, 250));
-    contenedorMapa.add(miniMapa, BorderLayout.CENTER);
-
-JButton btnVerMapa = crearBotonPrimario("🗺️ Ver en Mapa", new Color(70, 130, 255));
-btnVerMapa.addActionListener(e -> {
-    String latStr = txtLatitud.getText().trim();
-    String lonStr = txtLongitud.getText().trim();
-    String nombrePredio = txtNombre.getText().trim();
-
-    if (latStr.isEmpty() || lonStr.isEmpty()) {
-        JOptionPane.showMessageDialog(this, 
-            "⚠️ Primero ingresa las coordenadas (Latitud y Longitud)", 
-            "Datos incompletos", 
-            JOptionPane.WARNING_MESSAGE);
-        return;
-    }
-
-    try {
-        double lat = Double.parseDouble(latStr);
-        double lon = Double.parseDouble(lonStr);
-
-        // Validar que las coordenadas estén dentro del rango de Colombia
-        if (lat < -4.5 || lat > 13 || lon < -79 || lon > -66) {
-            JOptionPane.showMessageDialog(this,
-                "⚠️ Las coordenadas no corresponden a Colombia\n" +
-                "Latitud debe estar entre -4.5° y 13°\n" +
-                "Longitud debe estar entre -79° y -66°",
-                "Coordenadas fuera de rango",
-                JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        // Si el nombre del predio está vacío, usar uno genérico
-        String nombreMarcador = nombrePredio.isEmpty() ? "Predio sin nombre" : nombrePredio;
-
-        // 🗺️ Abrir el mapa interactivo con JavaSwing
-        SwingUtilities.invokeLater(() -> {
-            new MapaFrameSwing(lat, lon, nombreMarcador);
+                    @Override
+                    protected void done() {
+                        cbMunicipio.removeAllItems();
+                        cbMunicipio.addItem("Seleccione...");
+                        if (municipios != null) {
+                            for (String m : municipios) cbMunicipio.addItem(m);
+                        }
+                    }
+                };
+                workerM.execute();
+            }
         });
 
-    } catch (NumberFormatException ex) {
-        JOptionPane.showMessageDialog(this, 
-            "❌ Las coordenadas deben ser valores numéricos válidos.", 
-            "Error de formato", 
-            JOptionPane.ERROR_MESSAGE);
-    }
-});
+        gbc.gridy = 1;
+        panelForm.add(crearLabel("Número Predial:"), gbc);
+        gbc.gridy = 2;
+        panelForm.add(txtNumeroPredial, gbc);
 
+        gbc.gridy = 3;
+        panelForm.add(crearLabel("Nombre del predio:"), gbc);
+        gbc.gridy = 4;
+        panelForm.add(txtNombre, gbc);
 
-    panelMapa.add(lblMapaTitulo, BorderLayout.NORTH);
-    panelMapa.add(contenedorMapa, BorderLayout.CENTER);
-    panelMapa.add(btnVerMapa, BorderLayout.SOUTH);
+        gbc.gridy = 5;
+        panelForm.add(crearLabel("Departamento:"), gbc);
+        gbc.gridy = 6;
+        panelForm.add(cbDepartamento, gbc);
 
-    gbc.gridy = 15;
-    gbc.insets = new Insets(15, 0, 15, 0);
-    panelForm.add(panelMapa, gbc);
-    // ========== FIN MINIMAPA ==========
+        gbc.gridy = 7;
+        panelForm.add(crearLabel("Municipio:"), gbc);
+        gbc.gridy = 8;
+        panelForm.add(cbMunicipio, gbc);
 
+        gbc.gridy = 9;
+        panelForm.add(crearLabel("Vereda:"), gbc);
+        gbc.gridy = 10;
+        panelForm.add(txtVereda, gbc);
 
+        gbc.gridy = 11;
+        panelForm.add(crearLabel("Latitud:"), gbc);
+        gbc.gridy = 12;
+        panelForm.add(txtLatitud, gbc);
 
-    // Botones
-    JPanel panelBotones = new JPanel(new GridLayout(1, 2, 10, 0));
-    panelBotones.setOpaque(false);
+        gbc.gridy = 13;
+        panelForm.add(crearLabel("Longitud:"), gbc);
+        gbc.gridy = 14;
+        panelForm.add(txtLongitud, gbc);
 
-    JButton btnAgregar = crearBotonPrimario("+ Agregar", new Color(80, 200, 120));
-    JButton btnEliminar = crearBotonPrimario("- Eliminar", new Color(255, 100, 100));
+        // ========== MINIMAPA ==========
+        JPanel panelMapa = new JPanel(new BorderLayout(5, 5));
+        panelMapa.setBackground(new Color(250, 250, 252));
+        panelMapa.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(70, 130, 255), 2),
+            new EmptyBorder(12, 12, 12, 12)
+        ));
+        panelMapa.setPreferredSize(new Dimension(360, 350));
 
-    panelBotones.add(btnAgregar);
-    panelBotones.add(btnEliminar);
+        JLabel lblMapaTitulo = new JLabel("🗺️ Vista Previa del Predio");
+        lblMapaTitulo.setFont(new Font("Poppins", Font.BOLD, 14));
+        lblMapaTitulo.setForeground(new Color(25, 30, 40));
 
-    gbc.gridy = 16;
-    gbc.insets = new Insets(20, 0, 20, 0); // Padding inferior agregado
-    panelForm.add(panelBotones, gbc);
+        JEditorPane miniMapa = new JEditorPane();
+        miniMapa.setContentType("text/html");
+        miniMapa.setEditable(false);
+        miniMapa.setBackground(new Color(240, 245, 250));
+        
+        miniMapa.addHyperlinkListener(new HyperlinkListener() {
+            @Override
+            public void hyperlinkUpdate(HyperlinkEvent e) {
+                // No hacer nada - deshabilita clics en enlaces
+            }
+        });
 
-    // ========== SCROLL PARA TODO EL FORMULARIO ==========
-    JScrollPane scrollFormulario = new JScrollPane(panelForm);
-    scrollFormulario.setBorder(null);
-    scrollFormulario.getVerticalScrollBar().setUnitIncrement(16); // Velocidad del scroll
-    scrollFormulario.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-    scrollFormulario.getVerticalScrollBar().setPreferredSize(new Dimension(12, 0)); // Barra más delgada
-    
-    panelFormContainer.add(scrollFormulario, BorderLayout.CENTER);
-    panel.add(panelFormContainer, BorderLayout.WEST);
+        miniMapa.setText("<html><body style='font-family: Segoe UI; padding: 40px 20px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);'>"
+            + "<div style='background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);'>"
+            + "<div style='font-size: 48px; margin-bottom: 15px;'>📍</div>"
+            + "<h3 style='color: #1976D2; margin: 10px 0;'>Vista Previa del Predio</h3>"
+            + "<p style='color: #666; font-size: 13px; margin: 10px 0;'>"
+            + "Ingresa las coordenadas (Latitud y Longitud)<br>y presiona <b style='color: #1976D2;'>Ver en Mapa</b></p>"
+            + "</div></body></html>");
 
-    // Tabla
-    String[] columnas = {"N° Predial", "Nombre", "Ubicación", "Coordenadas"};
-    modeloTablaPredios = new DefaultTableModel(columnas, 0) {
-        @Override public boolean isCellEditable(int row, int column) { return false; }
-    };
-    tablaPredios = new JTable(modeloTablaPredios);
-    estilizarTabla(tablaPredios);
+        JPanel contenedorMapa = new JPanel(new BorderLayout());
+        contenedorMapa.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 230), 1));
+        contenedorMapa.setPreferredSize(new Dimension(340, 250));
+        contenedorMapa.add(miniMapa, BorderLayout.CENTER);
 
-    tablaPredios.addMouseListener(new MouseAdapter() {
-        @Override
-        public void mouseClicked(MouseEvent e) {
-            if (e.getClickCount() == 2) {
-                int fila = tablaPredios.getSelectedRow();
-                if (fila != -1 && propietario != null) {
-                    Predio predioSeleccionado = propietario.getPredios().get(fila);
-                    new EditarPredioFrame(predioSeleccionado, PropietarioFrame.this).setVisible(true);
+        JButton btnVerMapa = crearBotonPrimario("🗺️ Ver en Mapa", new Color(70, 130, 255));
+        btnVerMapa.addActionListener(e -> {
+            String latStr = txtLatitud.getText().trim();
+            String lonStr = txtLongitud.getText().trim();
+            String nombrePredio = txtNombre.getText().trim();
+
+            if (latStr.isEmpty() || lonStr.isEmpty()) {
+                JOptionPane.showMessageDialog(this, 
+                    "⚠️ Primero ingresa las coordenadas (Latitud y Longitud)", 
+                    "Datos incompletos", 
+                    JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            try {
+                double lat = Double.parseDouble(latStr);
+                double lon = Double.parseDouble(lonStr);
+
+                if (lat < -4.5 || lat > 13 || lon < -79 || lon > -66) {
+                    JOptionPane.showMessageDialog(this,
+                        "⚠️ Las coordenadas no corresponden a Colombia\n" +
+                        "Latitud debe estar entre -4.5° y 13°\n" +
+                        "Longitud debe estar entre -79° y -66°",
+                        "Coordenadas fuera de rango",
+                        JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                String nombreMarcador = nombrePredio.isEmpty() ? "Predio sin nombre" : nombrePredio;
+
+                SwingUtilities.invokeLater(() -> {
+                    new MapaFrameSwing(lat, lon, nombreMarcador);
+                });
+
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, 
+                    "❌ Las coordenadas deben ser valores numéricos válidos.", 
+                    "Error de formato", 
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        panelMapa.add(lblMapaTitulo, BorderLayout.NORTH);
+        panelMapa.add(contenedorMapa, BorderLayout.CENTER);
+        panelMapa.add(btnVerMapa, BorderLayout.SOUTH);
+
+        gbc.gridy = 15;
+        gbc.insets = new Insets(15, 0, 15, 0);
+        panelForm.add(panelMapa, gbc);
+
+        // Botones
+        JPanel panelBotones = new JPanel(new GridLayout(1, 2, 10, 0));
+        panelBotones.setOpaque(false);
+
+        JButton btnAgregar = crearBotonPrimario("+ Agregar", new Color(80, 200, 120));
+        JButton btnEliminar = crearBotonPrimario("- Eliminar", new Color(255, 100, 100));
+
+        panelBotones.add(btnAgregar);
+        panelBotones.add(btnEliminar);
+
+        gbc.gridy = 16;
+        gbc.insets = new Insets(20, 0, 20, 0);
+        panelForm.add(panelBotones, gbc);
+
+        // Scroll para formulario
+        JScrollPane scrollFormulario = new JScrollPane(panelForm);
+        scrollFormulario.setBorder(null);
+        scrollFormulario.getVerticalScrollBar().setUnitIncrement(16);
+        scrollFormulario.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollFormulario.getVerticalScrollBar().setPreferredSize(new Dimension(12, 0));
+        
+        panelFormContainer.add(scrollFormulario, BorderLayout.CENTER);
+        panel.add(panelFormContainer, BorderLayout.WEST);
+
+        // Tabla
+        String[] columnas = {"N° Predial", "Nombre", "Ubicación", "Coordenadas"};
+        modeloTablaPredios = new DefaultTableModel(columnas, 0) {
+            @Override public boolean isCellEditable(int row, int column) { return false; }
+        };
+        tablaPredios = new JTable(modeloTablaPredios);
+        estilizarTabla(tablaPredios);
+
+        tablaPredios.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    int fila = tablaPredios.getSelectedRow();
+                    if (fila != -1 && propietario != null) {
+                        // Crear copia segura para evitar ConcurrentModificationException
+                        List<Predio> copiaPredios = new ArrayList<>(propietario.getPredios());
+                        if (fila < copiaPredios.size()) {
+                            Predio predioSeleccionado = copiaPredios.get(fila);
+                            new EditarPredioFrame(predioSeleccionado, PropietarioFrame.this).setVisible(true);
+                        }
+                    }
                 }
             }
-        }
-    });
+        });
 
-    JScrollPane scrollTabla = new JScrollPane(tablaPredios);
-    scrollTabla.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 240), 1));
-    scrollTabla.getViewport().setBackground(Color.WHITE);
+        JScrollPane scrollTabla = new JScrollPane(tablaPredios);
+        scrollTabla.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 240), 1));
+        scrollTabla.getViewport().setBackground(Color.WHITE);
 
-    JPanel panelTablaContainer = new JPanel(new BorderLayout());
-    panelTablaContainer.setBackground(Color.WHITE);
+        JPanel panelTablaContainer = new JPanel(new BorderLayout());
+        panelTablaContainer.setBackground(Color.WHITE);
 
-    JLabel lblTablaTitulo = new JLabel("📋 Lista de Predios");
-    lblTablaTitulo.setFont(new Font("Poppins", Font.BOLD, 15));
-    lblTablaTitulo.setForeground(new Color(25, 30, 40));
-    lblTablaTitulo.setBorder(new EmptyBorder(0, 0, 10, 0));
+        JLabel lblTablaTitulo = new JLabel("📋 Lista de Predios");
+        lblTablaTitulo.setFont(new Font("Poppins", Font.BOLD, 15));
+        lblTablaTitulo.setForeground(new Color(25, 30, 40));
+        lblTablaTitulo.setBorder(new EmptyBorder(0, 0, 10, 0));
 
-    panelTablaContainer.add(lblTablaTitulo, BorderLayout.NORTH);
-    panelTablaContainer.add(scrollTabla, BorderLayout.CENTER);
+        panelTablaContainer.add(lblTablaTitulo, BorderLayout.NORTH);
+        panelTablaContainer.add(scrollTabla, BorderLayout.CENTER);
 
-    panel.add(panelTablaContainer, BorderLayout.CENTER);
+        panel.add(panelTablaContainer, BorderLayout.CENTER);
 
-    btnAgregar.addActionListener(e -> agregarPredio());
-    btnEliminar.addActionListener(e -> eliminarPredio());
+        btnAgregar.addActionListener(e -> agregarPredio());
+        btnEliminar.addActionListener(e -> eliminarPredio());
 
-    return panel;
-}
+        return panel;
+    }
 
-// ========== MÉTODO PARA GENERAR EL HTML DEL MAPA ==========
-private String generarHTMLMapa(double lat, double lon, String nombrePredio) {
-    return String.format("""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-            <style>
-                body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-                #map { height: 100vh; width: 100%%; }
-                .custom-popup {
-                    font-family: 'Segoe UI', sans-serif;
-                    font-size: 13px;
-                }
-                .custom-popup b {
-                    color: #1976D2;
-                    font-size: 14px;
-                }
-                .leaflet-popup-content {
-                    margin: 12px;
-                }
-            </style>
-        </head>
-        <body>
-            <div id="map"></div>
-            <script>
-                // Crear el mapa centrado en las coordenadas
-                var map = L.map('map').setView([%f, %f], 15);
-                
-                // Agregar capa de OpenStreetMap
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors',
-                    maxZoom: 19
-                }).addTo(map);
-                
-                // Crear icono personalizado para el marcador
-                var customIcon = L.divIcon({
-                    className: 'custom-marker',
-                    html: '<div style="background-color:#1976D2; width:30px; height:30px; border-radius:50%%; border:3px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.3);"></div>',
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15]
-                });
-                
-                // Agregar marcador en las coordenadas
-                var marker = L.marker([%f, %f], {icon: customIcon}).addTo(map);
-                
-                // Popup con información del predio
-                marker.bindPopup(
-                    '<div class="custom-popup">' +
-                    '<b>🏞️ %s</b><br>' +
-                    '<small>📍 Lat: %f°<br>📍 Lon: %f°</small>' +
-                    '</div>'
-                ).openPopup();
-                
-                // Agregar círculo de referencia (radio de 100m)
-                L.circle([%f, %f], {
-                    color: '#1976D2',
-                    fillColor: '#42A5F5',
-                    fillOpacity: 0.2,
-                    radius: 100
-                }).addTo(map);
-                
-                // Deshabilitar zoom con scroll (opcional)
-                map.scrollWheelZoom.disable();
-            </script>
-        </body>
-        </html>
-        """, 
-        lat, lon,           // Coordenadas del centro del mapa
-        lat, lon,           // Coordenadas del marcador
-        nombrePredio,       // Nombre del predio en el popup
-        lat, lon,           // Coordenadas en el texto del popup
-        lat, lon            // Coordenadas del círculo
-    );
-}
     private JPanel crearPanelHistorial() {
         JPanel panel = new JPanel(new BorderLayout(15, 15));
         panel.setBackground(Color.WHITE);
@@ -513,7 +429,7 @@ private String generarHTMLMapa(double lat, double lon, String nombrePredio) {
             BorderFactory.createLineBorder(new Color(230, 230, 240), 1),
             new EmptyBorder(25, 25, 25, 25)
         ));
-        panelForm.setPreferredSize(new Dimension(600, 300));
+        panelForm.setPreferredSize(new Dimension(600, 350));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -535,16 +451,45 @@ private String generarHTMLMapa(double lat, double lon, String nombrePredio) {
         estilizarCombo(cmbProductores);
         estilizarCombo(cmbPredios);
 
-        cmbProductores.addItem("-- Seleccione un productor --");
-        List<Usuario> productores = UserDatabase.obtenerUsuariosPorRol("Productor");
-        for (Usuario u : productores) {
-            cmbProductores.addItem(u.getId() + " - " + u.getNombre());
-        }
+        // Método para cargar todos los datos
+        Runnable cargarTodosLosDatos = () -> {
+            cmbProductores.removeAllItems();
+            cmbPredios.removeAllItems();
+            cmbProductores.addItem("🔄 Cargando...");
+            cmbPredios.addItem("🔄 Cargando...");
+            
+            SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                @Override
+                protected Void doInBackground() {
+                    List<Usuario> productores = UserDatabase.obtenerUsuariosPorRol("Productor");
+                    List<Predio> prediosActualizados = PredioDatabase.obtenerPrediosPorPropietario(
+                        Integer.parseInt(propietario.getId())
+                    );
+                    
+                    SwingUtilities.invokeLater(() -> {
+                        cmbProductores.removeAllItems();
+                        cmbProductores.addItem("-- Seleccione un productor --");
+                        for (Usuario u : productores) {
+                            cmbProductores.addItem(u.getId() + " - " + u.getNombre());
+                        }
+                        
+                        cmbPredios.removeAllItems();
+                        cmbPredios.addItem("-- Seleccione un predio --");
+                        // Usar copia para evitar ConcurrentModificationException
+                        List<Predio> copiaPredios = new ArrayList<>(prediosActualizados);
+                        for (Predio p : copiaPredios) {
+                            cmbPredios.addItem(p.getNumeroPredial() + " - " + p.getNombre());
+                        }
+                        
+                        cargarPredios();
+                    });
+                    return null;
+                }
+            };
+            worker.execute();
+        };
 
-        cmbPredios.addItem("-- Seleccione un predio --");
-        for (Predio p : propietario.getPredios()) {
-            cmbPredios.addItem(p.getNumeroPredial() + " - " + p.getNombre());
-        }
+        cargarTodosLosDatos.run();
 
         gbc.gridy = 1;
         panelForm.add(crearLabel("Seleccionar Productor:"), gbc);
@@ -556,14 +501,16 @@ private String generarHTMLMapa(double lat, double lon, String nombrePredio) {
         gbc.gridy = 4;
         panelForm.add(cmbPredios, gbc);
 
-        JPanel panelBotones = new JPanel(new GridLayout(1, 2, 15, 0));
+        JPanel panelBotones = new JPanel(new GridLayout(1, 3, 10, 0));
         panelBotones.setOpaque(false);
 
         JButton btnAsignar = crearBotonPrimario("✓ Asignar", new Color(80, 200, 120));
         JButton btnDesasignar = crearBotonPrimario("✗ Desasignar", new Color(255, 100, 100));
+        JButton btnActualizar = crearBotonPrimario("🔄 Actualizar", new Color(70, 130, 255));
 
         panelBotones.add(btnAsignar);
         panelBotones.add(btnDesasignar);
+        panelBotones.add(btnActualizar);
 
         gbc.gridy = 5;
         gbc.insets = new Insets(25, 0, 0, 0);
@@ -578,7 +525,10 @@ private String generarHTMLMapa(double lat, double lon, String nombrePredio) {
         // Eventos
         btnAsignar.addActionListener(e -> {
             if (cmbPredios.getSelectedIndex() <= 0 || cmbProductores.getSelectedIndex() <= 0) {
-                JOptionPane.showMessageDialog(this, "Seleccione productor y predio.");
+                JOptionPane.showMessageDialog(this, 
+                    "Seleccione productor y predio.", 
+                    "Datos incompletos", 
+                    JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
@@ -589,15 +539,25 @@ private String generarHTMLMapa(double lat, double lon, String nombrePredio) {
             String numeroPredial = predioSel.split(" - ")[0];
 
             if (PredioDatabase.asignarProductorAPredio(idProductor, numeroPredial)) {
-                JOptionPane.showMessageDialog(this, "✅ Productor asignado correctamente al predio");
+                JOptionPane.showMessageDialog(this, 
+                    "✅ Productor asignado correctamente al predio", 
+                    "Asignación exitosa", 
+                    JOptionPane.INFORMATION_MESSAGE);
+                cargarTodosLosDatos.run();
             } else {
-                JOptionPane.showMessageDialog(this, "❌ Error en la asignación");
+                JOptionPane.showMessageDialog(this, 
+                    "❌ Error en la asignación. Verifique que el productor no esté ya asignado a este predio.", 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
             }
         });
 
         btnDesasignar.addActionListener(e -> {
             if (cmbPredios.getSelectedIndex() <= 0 || cmbProductores.getSelectedIndex() <= 0) {
-                JOptionPane.showMessageDialog(this, "Seleccione productor y predio para desasignar.");
+                JOptionPane.showMessageDialog(this, 
+                    "Seleccione productor y predio para desasignar.", 
+                    "Datos incompletos", 
+                    JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
@@ -617,11 +577,37 @@ private String generarHTMLMapa(double lat, double lon, String nombrePredio) {
 
             if (confirm == JOptionPane.YES_OPTION) {
                 if (PredioDatabase.desasignarProductorDePredio(idProductor, numeroPredial)) {
-                    JOptionPane.showMessageDialog(this, "✅ Productor desasignado correctamente");
+                    JOptionPane.showMessageDialog(this, 
+                        "✅ Productor desasignado correctamente", 
+                        "Desasignación exitosa", 
+                        JOptionPane.INFORMATION_MESSAGE);
+                    cargarTodosLosDatos.run();
                 } else {
-                    JOptionPane.showMessageDialog(this, "❌ No se pudo desasignar el productor");
+                    JOptionPane.showMessageDialog(this, 
+                        "❌ No se pudo desasignar el productor. Verifique la asignación.", 
+                        "Error", 
+                        JOptionPane.ERROR_MESSAGE);
                 }
             }
+        });
+
+        btnActualizar.addActionListener(e -> {
+            btnActualizar.setEnabled(false);
+            btnActualizar.setText("🔄 Actualizando...");
+            
+            cargarTodosLosDatos.run();
+            
+            Timer timer = new Timer(2000, ev -> {
+                btnActualizar.setEnabled(true);
+                btnActualizar.setText("🔄 Actualizar");
+            });
+            timer.setRepeats(false);
+            timer.start();
+            
+            JOptionPane.showMessageDialog(this, 
+                "✅ Datos actualizados correctamente", 
+                "Actualización", 
+                JOptionPane.INFORMATION_MESSAGE);
         });
 
         return panel;
@@ -730,7 +716,7 @@ private String generarHTMLMapa(double lat, double lon, String nombrePredio) {
         return boton;
     }
 
-    // Métodos lógicos (sin cambios)
+    // Métodos lógicos
     private void agregarPredio() {
         String numeroPredial = txtNumeroPredial.getText().trim();
         String nombre = txtNombre.getText().trim();
@@ -768,7 +754,6 @@ private String generarHTMLMapa(double lat, double lon, String nombrePredio) {
             if (PredioDatabase.agregarPredio(nuevo)) {
                 propietario.agregarPredio(nuevo);
                 cargarPredios();
-
                 limpiarFormulario();
                 JOptionPane.showMessageDialog(this, 
                     "Predio agregado correctamente", 
@@ -817,14 +802,17 @@ private String generarHTMLMapa(double lat, double lon, String nombrePredio) {
     private void cargarPredios() {
         if (propietario == null) return;
 
-        propietario.getPredios().clear();
         List<Predio> prediosDB = PredioDatabase.obtenerPrediosPorPropietario(
             Integer.parseInt(propietario.getId())
         );
+        
+        propietario.getPredios().clear();
         propietario.getPredios().addAll(prediosDB);
 
         modeloTablaPredios.setRowCount(0);
-        for (Predio p : propietario.getPredios()) {
+        // Usar copia para evitar ConcurrentModificationException
+        List<Predio> copiaPredios = new ArrayList<>(prediosDB);
+        for (Predio p : copiaPredios) {
             modeloTablaPredios.addRow(new Object[]{
                 p.getNumeroPredial(),
                 p.getNombre(),
@@ -832,13 +820,24 @@ private String generarHTMLMapa(double lat, double lon, String nombrePredio) {
                 p.getCoordenadas()
             });
         }
+        
+        modeloTablaPredios.fireTableDataChanged();
+        if (tablaPredios != null) {
+            tablaPredios.repaint();
+        }
     }
 
     private void cargarHistorialInspecciones() {
         if (propietario == null || propietario.getPredios() == null) return;
+        
         modeloTablaInspecciones.setRowCount(0);
-        for (Predio p : propietario.getPredios()) {
-            for (Inspeccion i : InspeccionDatabase.obtenerInspeccionesPorPredio(p.getNumeroPredial())) {
+        
+        // SOLUCIÓN: Crear copia de la lista para evitar ConcurrentModificationException
+        List<Predio> copiaPredios = new ArrayList<>(propietario.getPredios());
+        
+        for (Predio p : copiaPredios) {
+            List<Inspeccion> inspecciones = InspeccionDatabase.obtenerInspeccionesPorPredio(p.getNumeroPredial());
+            for (Inspeccion i : inspecciones) {
                 modeloTablaInspecciones.addRow(new Object[]{
                     i.getPredio(), i.getFecha(), i.getTecnicoId(), i.getCultivo(),
                     i.getPlaga(), i.getObservacionesGenerales(), i.getObservacionesEspecificas()
@@ -850,51 +849,51 @@ private String generarHTMLMapa(double lat, double lon, String nombrePredio) {
     public void recargarPredios() { 
         cargarPredios(); 
     }
-private JPanel crearPanelReportes() {
-    JPanel panel = new JPanel(new BorderLayout(10, 10));
-    panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-    // Panel superior con botones de reportes
-    JPanel panelBotones = new JPanel(new GridLayout(3, 2, 10, 10));
-    panelBotones.setBorder(BorderFactory.createTitledBorder(
-        new LineBorder(new Color(0, 102, 204), 2, true),
-        "Reportes Disponibles", 0, 0, new Font("Segoe UI", Font.BOLD, 13)));
+    private JPanel crearPanelReportes() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-    // Área de texto para mostrar resultados
-    JTextArea areaResultados = new JTextArea();
-    areaResultados.setEditable(false);
-    areaResultados.setFont(new Font("Consolas", Font.PLAIN, 12));
-    areaResultados.setMargin(new Insets(10, 10, 10, 10));
-    JScrollPane scrollResultados = new JScrollPane(areaResultados);
+        JPanel panelBotones = new JPanel(new GridLayout(3, 2, 10, 10));
+        panelBotones.setBorder(BorderFactory.createTitledBorder(
+            new LineBorder(new Color(0, 102, 204), 2, true),
+            "Reportes Disponibles", 0, 0, new Font("Segoe UI", Font.BOLD, 13)));
 
-    // 📊 Reporte 1: Historial de inspecciones por predio
-    JButton btnHistorialInspecciones = crearBoton("Historial de Inspecciones", new Color(0, 102, 204));
-    btnHistorialInspecciones.addActionListener(e -> {
-        if (propietario.getPredios().isEmpty()) {
-            areaResultados.setText("⚠️ No tiene predios registrados");
-            return;
-        }
+        JTextArea areaResultados = new JTextArea();
+        areaResultados.setEditable(false);
+        areaResultados.setFont(new Font("Consolas", Font.PLAIN, 12));
+        areaResultados.setMargin(new Insets(10, 10, 10, 10));
+        JScrollPane scrollResultados = new JScrollPane(areaResultados);
 
-        // Selector de predio
-        String[] opcionesPredios = propietario.getPredios().stream() 
-            .map(p -> p.getNumeroPredial() + " - " + p.getNombre())
-            .toArray(String[]::new);
-
-        String seleccion = (String) JOptionPane.showInputDialog(
-            this, "Seleccione un predio:", "Historial de Inspecciones",
-            JOptionPane.QUESTION_MESSAGE, null, opcionesPredios, opcionesPredios[0]);
-
-        if (seleccion != null) {
-            String numeroPredial = seleccion.split(" - ")[0];
-            List<Map<String, Object>> historial = ReportesVistas.obtenerHistorialInspeccionesPredio(numeroPredial);
-            
-            if (historial.isEmpty()) {
-                areaResultados.setText("No hay inspecciones registradas para este predio");
-            } else {
-                areaResultados.setText(ReportesVistas.formatearReporte(historial));
+        // 📊 Reporte 1: Historial de inspecciones por predio
+        JButton btnHistorialInspecciones = crearBoton("Historial de Inspecciones", new Color(0, 102, 204));
+        btnHistorialInspecciones.addActionListener(e -> {
+            // Usar copia para evitar ConcurrentModificationException
+            List<Predio> copiaPredios = new ArrayList<>(propietario.getPredios());
+            if (copiaPredios.isEmpty()) {
+                areaResultados.setText("⚠️ No tiene predios registrados");
+                return;
             }
-        }
-    });
+
+            String[] opcionesPredios = copiaPredios.stream() 
+                .map(p -> p.getNumeroPredial() + " - " + p.getNombre())
+                .toArray(String[]::new);
+
+            String seleccion = (String) JOptionPane.showInputDialog(
+                this, "Seleccione un predio:", "Historial de Inspecciones",
+                JOptionPane.QUESTION_MESSAGE, null, opcionesPredios, opcionesPredios[0]);
+
+            if (seleccion != null) {
+                String numeroPredial = seleccion.split(" - ")[0];
+                List<Map<String, Object>> historial = ReportesVistas.obtenerHistorialInspeccionesPredio(numeroPredial);
+                
+                if (historial.isEmpty()) {
+                    areaResultados.setText("No hay inspecciones registradas para este predio");
+                } else {
+                    areaResultados.setText(ReportesVistas.formatearReporte(historial));
+                }
+            }
+        });
 
     // 📊 Reporte 2: Plagas más frecuentes
     JButton btnPlagasFrecuentes = crearBoton("Plagas Más Frecuentes", new Color(204, 102, 0));

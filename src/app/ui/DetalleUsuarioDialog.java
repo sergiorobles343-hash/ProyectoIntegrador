@@ -11,7 +11,7 @@ public class DetalleUsuarioDialog extends JDialog {
     private Usuario usuario;
     private JTextField txtNombre, txtDocumento, txtCorreo, txtEstado;
     private JLabel lblId;
-    private JButton btnPermitir, btnDenegar, btnBloquear, btnDesbloquear;
+    private JButton btnPermitir, btnEliminar, btnBloquear, btnDesbloquear;
 
     public DetalleUsuarioDialog(Frame owner, Usuario usuario) {
         super(owner, "Detalle de usuario - " + usuario.getNombreCompleto(), true);
@@ -103,13 +103,13 @@ public class DetalleUsuarioDialog extends JDialog {
         panelBotones.setBorder(new EmptyBorder(20, 0, 0, 0));
 
         btnPermitir = crearBotonAccion("✓ Permitir", new Color(80, 200, 120));
-        btnDenegar = crearBotonAccion("✗ Denegar", new Color(255, 100, 100));
+        btnEliminar = crearBotonAccion("🗑️ Eliminar", new Color(220, 80, 80)); // Color rojo más intenso para eliminar
         btnBloquear = crearBotonAccion("⊘ Bloquear", new Color(255, 160, 100));
         btnDesbloquear = crearBotonAccion("⊙ Desbloquear", new Color(90, 140, 255));
         JButton btnCerrar = crearBotonSecundario("Cerrar");
 
         panelBotones.add(btnPermitir);
-        panelBotones.add(btnDenegar);
+        panelBotones.add(btnEliminar);
         panelBotones.add(btnBloquear);
         panelBotones.add(btnDesbloquear);
         panelBotones.add(btnCerrar);
@@ -122,7 +122,7 @@ public class DetalleUsuarioDialog extends JDialog {
         // Acciones
         btnCerrar.addActionListener(e -> dispose());
         btnPermitir.addActionListener(e -> permitirUsuario());
-        btnDenegar.addActionListener(e -> denegarUsuario());
+        btnEliminar.addActionListener(e -> eliminarUsuario());
         btnBloquear.addActionListener(e -> bloquearUsuario());
         btnDesbloquear.addActionListener(e -> desbloquearUsuario());
 
@@ -164,7 +164,7 @@ public class DetalleUsuarioDialog extends JDialog {
         boton.setFocusPainted(false);
         boton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         boton.setBorder(new EmptyBorder(9, 16, 9, 16));
-        boton.setPreferredSize(new Dimension(110, 36));
+        boton.setPreferredSize(new Dimension(120, 36)); // Un poco más ancho para el nuevo texto
 
         boton.addMouseListener(new java.awt.event.MouseAdapter() {
             Color originalColor = colorFondo;
@@ -211,7 +211,6 @@ public class DetalleUsuarioDialog extends JDialog {
         return boton;
     }
 
-    // ✅ Métodos lógicos (sin cambios)
     private void cargarDatosEnFormulario() {
         lblId.setText(usuario.getId());
         txtNombre.setText(usuario.getNombreCompleto());
@@ -227,11 +226,34 @@ public class DetalleUsuarioDialog extends JDialog {
         JOptionPane.showMessageDialog(this, "Usuario aprobado correctamente.");
     }
 
-    private void denegarUsuario() {
-        usuario.setAprobado(false);
-        actualizarUsuarioBD();
-        actualizarEstadoVisual();
-        JOptionPane.showMessageDialog(this, "Usuario denegado.");
+    private void eliminarUsuario() {
+        // Confirmación antes de eliminar
+        int confirmacion = JOptionPane.showConfirmDialog(
+            this,
+            "¿Está seguro de ELIMINAR permanentemente al usuario?\n\n" +
+            "Usuario: " + usuario.getNombreCompleto() + "\n" +
+            "Documento: " + usuario.getDocumento() + "\n\n" +
+            "⚠️ Esta acción NO se puede deshacer.",
+            "Confirmar Eliminación",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE
+        );
+
+        if (confirmacion == JOptionPane.YES_OPTION) {
+            boolean eliminado = UserDatabase.eliminarUsuario(usuario.getId());
+            if (eliminado) {
+                JOptionPane.showMessageDialog(this, 
+                    "✅ Usuario eliminado correctamente.", 
+                    "Eliminación Exitosa", 
+                    JOptionPane.INFORMATION_MESSAGE);
+                dispose(); // Cerrar el diálogo después de eliminar
+            } else {
+                JOptionPane.showMessageDialog(this, 
+                    "❌ Error al eliminar el usuario.", 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     private void bloquearUsuario() {

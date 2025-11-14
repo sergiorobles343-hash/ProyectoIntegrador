@@ -457,4 +457,38 @@ public static Usuario obtenerUsuarioPorDocumento(String documento) {
             
         }
     }
+    /**
+     * Elimina un usuario permanentemente de la base de datos.
+     * 
+     * Este método elimina el registro del usuario con el ID especificado.
+     * La eliminación es permanente y no se puede deshacer.
+     *
+     * @param idUsuario ID del usuario a eliminar.
+     * @return true si la eliminación fue exitosa, false en caso contrario.
+     */
+    public static boolean eliminarUsuario(String idUsuario) {
+        // Prevenir eliminación del administrador principal
+        if ("999".equals(idUsuario)) {
+            System.err.println("🚫 No se puede eliminar al administrador del sistema");
+            return false;
+        }
+        
+        String sql = "DELETE FROM USUARIO WHERE ID_USUARIO = ?";
+        try (Connection conn = Conexion.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, Integer.parseInt(idUsuario));
+            int filasAfectadas = ps.executeUpdate();
+            
+            return filasAfectadas > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("❌ Error al eliminar usuario: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        } catch (NumberFormatException e) {
+            System.err.println("❌ Error: ID de usuario no válido: " + idUsuario);
+            return false;
+        }
+    }
 }
